@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circle Burst — p5.js</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+<style>
+  html, body { margin:0; padding:0; overflow:hidden; background:#000; }
+  canvas { display:block; }
+</style>
+</head>
+<body>
+<script>
+let cam;
+let scaleFactor = 11;
+let rotationAngles = [];
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  cam = createCapture(VIDEO);
+  cam.size(1000 / scaleFactor, 800 / scaleFactor);
+  cam.hide();
+  rectMode(CENTER);
+  angleMode(DEGREES);
+  noStroke();
+}
+
+function draw() {
+  background(255);
+
+  if (!cam || cam.width === 0 || cam.height === 0) return;
+
+  cam.loadPixels();
+  if (!cam.pixels || cam.pixels.length === 0) return;
+
+
+  if (rotationAngles.length === 0) {
+    for (let y = 0; y < cam.height; y++) {
+      rotationAngles[y] = [];
+      for (let x = 0; x < cam.width; x++) {
+        rotationAngles[y][x] = random(360);
+      }
+    }
+  }
+
+  push();
+  translate(width / 2, 0); 
+  scale(-1, 1);           
+  translate(-width / 2, 0); 
+  translate((width - cam.width * scaleFactor) / 2, (height - cam.height * scaleFactor) / 2);
+
+  let index = 0;
+  for (let y = 0; y < cam.height; y++) {
+    for (let x = 0; x < cam.width; x++) {
+      let r = cam.pixels[index];
+      let g = cam.pixels[index + 1];
+      let b = cam.pixels[index + 2];
+
+      let brightness = (r + g + b) / 3;
+      let size = map(brightness, 0, 255, 20, 2);
+      let rotationSpeed = map(brightness, 0, 255, 0, 10);
+      rotationAngles[y][x] += rotationSpeed;
+
+      let c = lerpColor(color(255, 0, 0), color(255, 255, 0), brightness / 255);
+
+      push();
+      translate(x * scaleFactor, y * scaleFactor);
+      rotate(rotationAngles[y][x]);
+      fill(c);
+      rect(0, 0, size);
+      pop();
+
+      index += 4;
+    }
+  }
+  pop();
+}
+
+</script>
+</body>
+</html>
